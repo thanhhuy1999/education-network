@@ -47,7 +47,8 @@ export default (sequelize: Sequelize, DataTypes: any) => {
             isSuspended: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
-                defaultValue: false
+                defaultValue: false,
+                field: "is_suspended",
             },
             createdAt: {
                 type: DataTypes.DATE,

@@ -33,6 +33,7 @@ export default (sequelize: Sequelize, DataTypes: any) => {
                     key: "id",
                 },
                 allowNull: false,
+                field: "teacher_id"
             },
             studentId: {
                 type: DataTypes.INTEGER,
@@ -42,6 +43,7 @@ export default (sequelize: Sequelize, DataTypes: any) => {
                     key: "id",
                 },
                 allowNull: false,
+                field: "student_id"
             },
             createdAt: {
                 type: DataTypes.DATE,
