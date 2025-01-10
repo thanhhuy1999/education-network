@@ -2,6 +2,7 @@ import express from "express";
 import db from "./models";
 import bodyParser from "body-parser";
 import { seedData } from "./seed/seed-data";
+import { CustomError, errorHandler } from "./Util/CustomError";
 
 const app = express();
 const port = 3000;
@@ -22,6 +23,10 @@ db.sequelize
         console.error("Unable to connect to the database:", error);
     });
 
+//using handle global error
+app.use(errorHandler);
+
+//start server
 app.listen(port, () => {
     console.log(`Server is listening at http://localhost:${port}`);
 });
