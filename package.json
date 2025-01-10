@@ -1,0 +1,28 @@
+{
+  "name": "teacher-student",
+  "version": "1.0.0",
+  "description": "Project about education network",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start-dev": "nodemon -L src/index.ts",
+    "docker-up": "docker-compose down && docker-compose up",
+    "docker-down": "docker-compose down"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-async-errors": "^3.1.1",
+    "mysql2": "^3.12.0",
+    "nodemon": "^3.1.9",
+    "sequelize": "^6.37.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.3"
+  }
+}
