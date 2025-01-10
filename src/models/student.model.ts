@@ -4,7 +4,7 @@ import { Optional } from "sequelize/types";
 interface StudentAttributes {
     id: number;
     email: string;
-    isSuspended: string;
+    isSuspended: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -17,7 +17,7 @@ export class Student
     implements StudentAttributes {
     public id!: number;
     public email!: string;
-    public isSuspended!: string;
+    public isSuspended!: boolean;
 
     public static associate(models: any) {
         Student.belongsToMany(models.Teacher, {
@@ -45,8 +45,9 @@ export default (sequelize: Sequelize, DataTypes: any) => {
                 },
             },
             isSuspended: {
-                type: DataTypes.STRING,
+                type: DataTypes.BOOLEAN,
                 allowNull: false,
+                defaultValue: false
             },
             createdAt: {
                 type: DataTypes.DATE,

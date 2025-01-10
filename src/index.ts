@@ -1,6 +1,7 @@
 import express from "express";
 import db from "./models";
 import bodyParser from "body-parser";
+import { seedData } from "./seed/seed-data";
 
 const app = express();
 const port = 3000;
@@ -12,8 +13,9 @@ app.get("/", (req: any, res: any) => {
 });
 
 db.sequelize
-    .sync({ alter: true })
+    .sync({ alter: true }) //update column if have any change || create new when initial
     .then(() => {
+        seedData(); //create mock data for test
         console.log("Synchronization complete.");
     })
     .catch((error: any) => {
