@@ -2,7 +2,8 @@ import express from "express";
 import db from "./models";
 import bodyParser from "body-parser";
 import { seedData } from "./seed/seed-data";
-import { CustomError, errorHandler } from "./util/CustomError";
+import { errorHandler } from "./util/CustomError";
+import router from "./routes";
 
 const app = express();
 const port = 3000;
@@ -12,6 +13,8 @@ app.use(bodyParser.json());
 app.get("/", (req: any, res: any) => {
     res.send("Hello world!");
 });
+
+app.use(router)
 
 db.sequelize
     .sync({ alter: true }) //update column if have any change || create new when initial
