@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { HttpStatus } from "../constants/HttpStatus";
 
 export class CustomError extends Error {
     public statusCode: number;
@@ -25,7 +26,7 @@ export const errorHandler = (
     } else {
         res.status(error.statusCode).json({
             errorMessage: "Something went wrong.",
-            errorCode: 500,
+            errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
         });
     }
 };

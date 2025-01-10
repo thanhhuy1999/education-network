@@ -1,6 +1,8 @@
 import { Teacher } from '../models/teacher.model';
 import { Student } from '../models/student.model';
 import { TeacherStudent } from '../models/teacherStudent.model';
+import { CustomError } from '../util/CustomError';
+import { HttpStatus } from '../constants/HttpStatus';
 
 export const seedData = async () => {
     try {
@@ -62,6 +64,6 @@ export const seedData = async () => {
         //     }
         // }
     } catch (error) {
-        //console.log(error)
+        throw new CustomError(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create the users.");
     }
 };

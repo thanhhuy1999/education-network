@@ -2,7 +2,7 @@ import express from "express";
 import db from "./models";
 import bodyParser from "body-parser";
 import { seedData } from "./seed/seed-data";
-import { CustomError, errorHandler } from "./Util/CustomError";
+import { CustomError, errorHandler } from "./util/CustomError";
 
 const app = express();
 const port = 3000;
