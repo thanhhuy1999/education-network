@@ -18,14 +18,9 @@ export default class TeacherService {
 
         if (error) {
             throw new CustomError(HttpStatus.BAD_REQUEST, error.details[0].message)
-
         }
 
         const { teacher, students } = value;
-
-        if (!teacher || !students || students.length === 0) {
-            throw new CustomError(HttpStatus.BAD_REQUEST, 'Invalid request, missing teacher or students')
-        }
 
         // find the teacher by email
         const teacherRecord = await db.Teacher.findOne({ where: { email: teacher } });
@@ -70,7 +65,7 @@ export default class TeacherService {
 
         // all associations already existed => return (or throw error) base on bussiness
         if (newAssociations.length === 0) {
-            return
+            return;
         }
 
         // bulk create associations in teacher-student table
