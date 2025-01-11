@@ -4,8 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import db from "./models";
 import bodyParser from "body-parser";
-import { seedData } from "./seed/seed-data";
-import { errorHandler } from "./util/CustomError";
+import { seedData } from "./seeds/SeedData";
+import { errorHandler } from "./utils/CustomError";
 import router from "./routes";
 
 const app = express();

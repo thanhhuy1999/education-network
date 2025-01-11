@@ -1,14 +1,14 @@
 import Joi from "joi";
 import { HttpStatus } from "../constants/HttpStatus";
-import { getCommonStudentsSchema } from "../dto/CommonStudent.dto";
-import { RegisterStudent, registerStudentSchema } from "../dto/RegisterStudent.dto";
-import { RetrieveForNotification, retrieveForNotificationsSchema } from "../dto/RetrieveForNotification.dto";
-import { SuspendStudent, suspendStudentSchema } from "../dto/SuspendStudent.dto";
+import { getCommonStudentsSchema } from "../dtos/CommonStudent.dto";
+import { RegisterStudent, registerStudentSchema } from "../dtos/RegisterStudent.dto";
+import { RetrieveForNotification, retrieveForNotificationsSchema } from "../dtos/RetrieveForNotification.dto";
+import { SuspendStudent, suspendStudentSchema } from "../dtos/SuspendStudent.dto";
 import db from "../models";
-import { Student } from "../models/student.model";
-import { Teacher } from "../models/teacher.model";
-import { TeacherStudent } from "../models/teacherStudent.model";
-import { CustomError } from "../util/CustomError"
+import { Student } from "../models/StudentModel";
+import { Teacher } from "../models/TeacherModel";
+import { TeacherStudent } from "../models/TeacherStudentModel";
+import { CustomError } from "../utils/CustomError"
 import { Op } from "sequelize";
 
 export default class TeacherService {

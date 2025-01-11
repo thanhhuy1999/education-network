@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Sequelize, DataTypes, Options } from "sequelize";
-import config from "../config/config";
+import config from "../configs/Config";
 import "express-async-errors";
 
 const basename = path.basename(__filename);

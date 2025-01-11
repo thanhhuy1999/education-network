@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import teacherService from "../services/teacher.service"
+import teacherService from "../services/TeacherService"
 import { HttpStatus } from "../constants/HttpStatus";
 
 export default class TeacherController {

@@ -1,7 +1,7 @@
-import { Teacher } from '../models/teacher.model';
-import { Student } from '../models/student.model';
-import { TeacherStudent } from '../models/teacherStudent.model';
-import { CustomError } from '../util/CustomError';
+import { Teacher } from '../models/TeacherModel';
+import { Student } from '../models/StudentModel';
+import { TeacherStudent } from '../models/TeacherStudentModel';
+import { CustomError } from '../utils/CustomError';
 import { HttpStatus } from '../constants/HttpStatus';
 
 export const seedData = async () => {

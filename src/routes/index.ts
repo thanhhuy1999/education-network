@@ -1,4 +1,4 @@
-import teacherRoute from "./teacher.route";
+import teacherRoute from "./TeacherRoute";
 
 import express from "express"
 
