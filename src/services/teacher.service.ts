@@ -1,13 +1,24 @@
 import { HttpStatus } from "../constants/HttpStatus";
-import { RegisterStudent } from "../dto/RegisterStudent.dto";
+import { getCommonStudentsSchema } from "../dto/CommonStudent.dto";
+import { RegisterStudent, registerStudentSchema } from "../dto/RegisterStudent.dto";
+import { SuspendStudent, suspendStudentSchema } from "../dto/SuspendStudent.dto";
 import db from "../models";
 import { Student } from "../models/student.model";
 import { Teacher } from "../models/teacher.model";
+import { TeacherStudent } from "../models/teacherStudent.model";
 import { CustomError } from "../util/CustomError"
 
 export default class TeacherService {
     static registerStudent = async (body: RegisterStudent) => {
-        const { teacher, students } = body;
+        //validate input
+        const { error, value } = registerStudentSchema.validate(body);
+
+        if (error) {
+            throw new CustomError(HttpStatus.BAD_REQUEST, error.details[0].message)
+
+        }
+
+        const { teacher, students } = value;
 
         if (!teacher || !students || students.length === 0) {
             throw new CustomError(HttpStatus.BAD_REQUEST, 'Invalid request, missing teacher or students')
@@ -34,24 +45,45 @@ export default class TeacherService {
             throw new CustomError(HttpStatus.BAD_REQUEST, `Students not found: ${missingStudents.join(', ')}`)
         }
 
-        // Associate the teacher with the students
-        const teacherStudentAssociations = studentRecords.map((student: Partial<Student>) => ({
-            teacherId: teacherRecord.id,
-            studentId: student.id,
-        }));
+        // check existing associations in the TeacherStudent table
+        const existingAssociations = await db.TeacherStudent.findAll({
+            where: {
+                teacherId: teacherRecord.id,
+                studentId: studentRecords.map((student: Partial<Student>) => student.id),
+            },
+        });
 
-        // Bulk create associations in teacher-student table
-        await db.TeacherStudent.bulkCreate(teacherStudentAssociations);
+        const existingStudentIds = new Set(
+            existingAssociations.map((association: Partial<TeacherStudent>) => association.studentId)
+        );
+
+        // filter out existing associations
+        const newAssociations = studentRecords
+            .filter((student: Partial<Student>) => !existingStudentIds.has(student.id))
+            .map((student: Partial<Student>) => ({
+                teacherId: teacherRecord.id,
+                studentId: student.id,
+            }));
+
+        // all associations already existed => return (or throw error) base on bussiness
+        if (newAssociations.length === 0) {
+            return
+        }
+
+        // bulk create associations in teacher-student table
+        await db.TeacherStudent.bulkCreate(newAssociations);
     }
 
     static getCommonStudents = async (query: any) => {
-        //convert query to list
-        let { teacher } = query;
-        teacher = Array.isArray(teacher) ? teacher : [teacher];
+        const { error, value } = getCommonStudentsSchema.validate(query);
 
-        if (!teacher || !Array.isArray(teacher) || teacher.length === 0) {
-            throw new CustomError(HttpStatus.BAD_REQUEST, `At least one teacher must be provided`)
+        if (error) {
+            throw new CustomError(HttpStatus.BAD_REQUEST, error.details[0].message);
         }
+
+        //change to array list
+        let { teacher } = value;
+        teacher = Array.isArray(teacher) ? teacher : [teacher];
 
         //find all teachers with their student
         const teachersWithStudents = await db.Teacher.findAll({
@@ -99,5 +131,26 @@ export default class TeacherService {
         });
 
         return { students: commonStudents ? commonStudents.map((s: Partial<Student>) => s.email) : [] };
+    }
+
+    static suspendStudent = async (body: SuspendStudent) => {
+        //validate input
+        const { error, value } = suspendStudentSchema.validate(body)
+
+        if (error) {
+            throw new CustomError(HttpStatus.BAD_REQUEST, error.details[0].message)
+        }
+
+        const { student } = value;
+
+        const studentRecord = await db.Student.findOne({ where: { email: student } });
+
+        // if the student does not exist, return an error
+        if (!studentRecord) {
+            throw new CustomError(HttpStatus.NOT_FOUND, `Student with email ${student} not found`);
+        }
+
+        studentRecord.isSuspended = true;
+        await studentRecord.save();
     }
 }

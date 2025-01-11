@@ -14,5 +14,11 @@ export default class TeacherController {
 
         res.status(HttpStatus.OK).json(commonStudents)
     }
+
+    static suspendStudent = async (req: Request, res: Response, next: NextFunction) => {
+        await teacherService.suspendStudent(req.body);
+
+        res.status(HttpStatus.NO_CONTENT).json("");
+    };
 }
 

@@ -17,14 +17,14 @@ export const errorHandler = (
     res: Response,
     next: NextFunction,
 ) => {
-    //   console.log(error);
     if (error instanceof CustomError) {
         res.status(error.statusCode).json({
             errorMessage: error.message,
             errorCode: error.statusCode,
         });
     } else {
-        res.status(error.statusCode).json({
+        console.log(error)
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
             errorMessage: "Something went wrong.",
             errorCode: HttpStatus.INTERNAL_SERVER_ERROR,
         });
