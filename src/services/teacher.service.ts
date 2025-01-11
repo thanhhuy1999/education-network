@@ -1,12 +1,15 @@
+import Joi from "joi";
 import { HttpStatus } from "../constants/HttpStatus";
 import { getCommonStudentsSchema } from "../dto/CommonStudent.dto";
 import { RegisterStudent, registerStudentSchema } from "../dto/RegisterStudent.dto";
+import { RetrieveForNotification, retrieveForNotificationsSchema } from "../dto/RetrieveForNotification.dto";
 import { SuspendStudent, suspendStudentSchema } from "../dto/SuspendStudent.dto";
 import db from "../models";
 import { Student } from "../models/student.model";
 import { Teacher } from "../models/teacher.model";
 import { TeacherStudent } from "../models/teacherStudent.model";
 import { CustomError } from "../util/CustomError"
+import { Op } from "sequelize";
 
 export default class TeacherService {
     static registerStudent = async (body: RegisterStudent) => {
@@ -152,5 +155,69 @@ export default class TeacherService {
 
         studentRecord.isSuspended = true;
         await studentRecord.save();
+    }
+
+    static retrieveForNotificationStudent = async (body: RetrieveForNotification) => {
+        //validate input
+        const { error, value } = retrieveForNotificationsSchema.validate(body)
+
+        if (error) {
+            throw new CustomError(HttpStatus.BAD_REQUEST, error.details[0].message)
+        }
+
+        const { teacher, notification } = value;
+
+        // exact email from notification
+        const words = notification.split(' ');
+        const mentionedEmails = words
+            .filter((word: string) => word.startsWith('@'))
+            .map((word: string) => word.slice(1));
+
+        // validate email in mention notification
+        const invalidEmails = mentionedEmails.filter((email: string) => Joi.string().email().validate(email).error);
+        if (invalidEmails.length > 0) {
+            throw new CustomError(HttpStatus.BAD_REQUEST, `Invalid email addresses in mention: ${invalidEmails.join(', ')}`)
+        }
+
+        // find the teacher by email
+        const teacherRecord = await db.Teacher.findOne({ where: { email: teacher } });
+        if (!teacherRecord) {
+            throw new CustomError(HttpStatus.NOT_FOUND, "Teacher not found!")
+        }
+
+        // find all student under the teacher
+        const teacherStudentRecords = await TeacherStudent.findAll({
+            where: { teacherId: teacherRecord.id },
+            include: [
+                {
+                    model: Student,
+                    attributes: ['email'],
+                },
+            ],
+        });
+
+        // get email of student under the teacher
+        const registeredStudentEmails = teacherStudentRecords.map((teacherStudent: any) => teacherStudent.Student.email);
+
+        // find suspended student 
+        const suspendedStudentEmails = await db.Student.findAll({
+            where: {
+                email: {
+                    [Op.in]: [...registeredStudentEmails, ...mentionedEmails],
+                },
+                isSuspended: 1
+            },
+            attributes: ['email'],
+        });
+
+        const suspendedEmails = suspendedStudentEmails.map((student: Partial<Student>) => student.email);
+
+        // get final result
+        const eligibleEmails = new Set([
+            ...registeredStudentEmails.filter((email: string) => !suspendedEmails.includes(email)),
+            ...mentionedEmails.filter((email: string) => !suspendedEmails.includes(email)),
+        ]);
+
+        return { recipients: [...eligibleEmails] };
     }
 }

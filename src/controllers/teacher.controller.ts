@@ -20,5 +20,11 @@ export default class TeacherController {
 
         res.status(HttpStatus.NO_CONTENT).json("");
     };
+
+    static retrieveForNotificationStudent = async (req: Request, res: Response, next: NextFunction) => {
+        const listRecipients = await teacherService.retrieveForNotificationStudent(req.body);
+
+        res.status(HttpStatus.OK).json(listRecipients);
+    };
 }
 
