@@ -5,6 +5,10 @@ export interface RetrieveForNotification {
     notification: string
 }
 
+export interface RetrieveForNotificationRes {
+    recipients: string[] | [];
+}
+
 export const retrieveForNotificationsSchema = Joi.object({
     teacher: Joi.string().email().required().messages({
         'string.base': 'Teacher email must be a string',

@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { HttpStatus } from "../constants/HttpStatus";
-import { getCommonStudentsSchema } from "../dtos/CommonStudent.dto";
+import { CommonStudentRes, getCommonStudentsSchema } from "../dtos/CommonStudent.dto";
 import { RegisterStudent, registerStudentSchema } from "../dtos/RegisterStudent.dto";
-import { RetrieveForNotification, retrieveForNotificationsSchema } from "../dtos/RetrieveForNotification.dto";
+import { RetrieveForNotification, RetrieveForNotificationRes, retrieveForNotificationsSchema } from "../dtos/RetrieveForNotification.dto";
 import { SuspendStudent, suspendStudentSchema } from "../dtos/SuspendStudent.dto";
 import db from "../models";
 import { Student } from "../models/StudentModel";
@@ -12,7 +12,7 @@ import { CustomError } from "../utils/CustomError"
 import { Op } from "sequelize";
 
 export default class TeacherService {
-    static registerStudent = async (body: RegisterStudent) => {
+    static registerStudent = async (body: RegisterStudent): Promise<void> => {
         //validate input
         const { error, value } = registerStudentSchema.validate(body);
 
@@ -77,7 +77,7 @@ export default class TeacherService {
         await db.TeacherStudent.bulkCreate(newAssociations);
     }
 
-    static getCommonStudents = async (query: any) => {
+    static getCommonStudents = async (query: any): Promise<CommonStudentRes> => {
         const { error, value } = getCommonStudentsSchema.validate(query);
 
         if (error) {
@@ -136,7 +136,7 @@ export default class TeacherService {
         return { students: commonStudents ? commonStudents.map((s: Partial<Student>) => s.email) : [] };
     }
 
-    static suspendStudent = async (body: SuspendStudent) => {
+    static suspendStudent = async (body: SuspendStudent): Promise<void> => {
         //validate input
         const { error, value } = suspendStudentSchema.validate(body)
 
@@ -157,7 +157,7 @@ export default class TeacherService {
         await studentRecord.save();
     }
 
-    static retrieveForNotificationStudent = async (body: RetrieveForNotification) => {
+    static retrieveForNotificationStudent = async (body: RetrieveForNotification): Promise<RetrieveForNotificationRes> => {
         //validate input
         const { error, value } = retrieveForNotificationsSchema.validate(body)
 

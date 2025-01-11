@@ -1,5 +1,9 @@
 import Joi from "joi";
 
+export interface CommonStudentRes{
+    students : string[] | []
+}
+
 export const getCommonStudentsSchema = Joi.object({
     teacher: Joi.alternatives()
         .try(
