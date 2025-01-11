@@ -11,6 +11,33 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
     restart: always
+    networks:
+      - my-network
+  express-server:
+    container_name: education-network-server
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT}
+      DB_DIALECT: ${DB_DIALECT}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${PORT}:${PORT}"
+    networks:
+      - my-network
+networks:
+  my-network:
+    driver: bridge
