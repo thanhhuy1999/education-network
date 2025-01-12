@@ -21,7 +21,8 @@ The system provides APIs enabling teachers to manage their students through vari
   - [Environment setup](#environment-setup)
   - [Run docker compose](#run-docker-compose)
 - [How to test](#how-to-test)
-  - [Import Postman collection](#import-postman-collection)
+  - [1. Using swagger](#using-swagger-api)
+  - [2. Import Postman collection](#import-postman-collection)
   - [Call the first api](#call-the-first-api)
 - [Note](#note)
 - [Contact](#contact)
@@ -137,6 +138,10 @@ npm run test
 ```
 
 ## How to test
+### Using swagger api
+I already implement swagger api docs for this project and you can use this for test
+Go to: http://localhost:3000/api-docs and test api what you want
+
 ### Import Postman collection
 Import the content of [Postman File](./TeacherStudent.postman_collection.json) to Postman following guide.
 ![Import postman guide](./images/guide-import-postman.png).

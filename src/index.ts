@@ -2,6 +2,9 @@ import express from "express";
 import morgan from 'morgan';
 import fs from 'fs';
 import path from 'path';
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+import swaggerOptions from "../swagger.config";
 import db from "./models";
 import bodyParser from "body-parser";
 import { seedData } from "./seeds/SeedData";
@@ -12,6 +15,12 @@ const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
+
+// create swagger-docs
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+// implement swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // setup for logging
 // create path
