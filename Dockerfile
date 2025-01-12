@@ -1,6 +1,6 @@
 FROM node:latest
 
-WORKDIR /teacher-student
+WORKDIR /education-network
 
 COPY package.json ./
 

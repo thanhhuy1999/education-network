@@ -1,7 +1,9 @@
 import { Options } from "swagger-jsdoc";
 import dotenv from "dotenv";
+import { TeacherRoutesSwagger } from "./src/swaggers/TeacherRoutesSwagger";
 dotenv.config();
 
+const PORT = process.env.PORT || 3000
 const swaggerOptions: Options = {
     definition: {
         openapi: "3.0.0",
@@ -12,9 +14,13 @@ const swaggerOptions: Options = {
         },
         servers: [
             {
-                url: `http://localhost:${process.env.PORT}`, //assume using localhost; can change url if deploy to production
+                url: `http://localhost:${PORT}`, //assume using localhost; can change url if deploy to production
+                description: "Local Server"
             },
         ],
+        paths: {
+            ...TeacherRoutesSwagger,
+        },
     },
     apis: ["./src/routes/*.ts"],
 };
