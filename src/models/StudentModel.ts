@@ -67,7 +67,7 @@ export default (sequelize: Sequelize, DataTypes: any) => {
         },
         {
             sequelize,
-            tableName: "students",
+            tableName: "student",
             modelName: "Student",
             timestamps: false,
         },

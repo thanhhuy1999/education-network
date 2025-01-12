@@ -70,6 +70,16 @@ describe("TeacherService", () => {
             );
         });
 
+        it("Should throw error if teacher not found", async () => {
+            const query = { teacher: "teacher1@school.com" };
+
+            jest.spyOn(db.Teacher, "findAll").mockResolvedValue([]);
+
+            await expect(TeacherService.getCommonStudents(query)).rejects.toThrowError(
+                new CustomError(HttpStatus.BAD_REQUEST, "One or more teachers not found: teacher1@school.com")
+            );
+        });
+
         it("Should return common students", async () => {
             const query = { teacher: ["teacher1@school.com", "teacher2@school.com"] };
 
@@ -89,6 +99,14 @@ describe("TeacherService", () => {
     });
 
     describe("SuspendStudentService", () => {
+        it("Should throw an error if input invalid", async () => {
+            const body = { student: "invalidEmail@something" };
+
+            await expect(TeacherService.suspendStudent(body)).rejects.toThrowError(
+                new CustomError(HttpStatus.BAD_REQUEST, "Student email must be a valid email address")
+            );
+        });
+
         it("Should throw an error if student is not found", async () => {
             const body = { student: "nonexistent@student.com" };
 
@@ -109,11 +127,29 @@ describe("TeacherService", () => {
     });
 
     describe("RetrieveForNotificationStudentService", () => {
+        it("Should throw an error if input invalid", async () => {
+            const body = { teacher: "invalidEmail@something", notification: "Hello everyone" };
+
+            await expect(TeacherService.retrieveForNotificationStudent(body)).rejects.toThrowError(
+                new CustomError(HttpStatus.BAD_REQUEST, "Teacher email must be a valid email")
+            );
+        });
+
         it("Should throw an error if email is invalid in notification", async () => {
             const body = { teacher: "teacher@school.com", notification: "Hello @invalid-email" };
 
             await expect(TeacherService.retrieveForNotificationStudent(body)).rejects.toThrowError(
                 new CustomError(HttpStatus.BAD_REQUEST, "Invalid email addresses in mention: invalid-email")
+            );
+        });
+
+        it("Should throw an error if teacher not found", async () => {
+            const body = { teacher: "notExistTeacher@school.com", notification: "Hello everyone" };
+
+            jest.spyOn(db.Teacher, "findOne").mockResolvedValue(null);
+
+            await expect(TeacherService.retrieveForNotificationStudent(body)).rejects.toThrowError(
+                new CustomError(HttpStatus.BAD_REQUEST, "Teacher not found!")
             );
         });
 

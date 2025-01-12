@@ -59,7 +59,7 @@ export default (sequelize: Sequelize, DataTypes: any) => {
         },
         {
             sequelize,
-            tableName: "teachers",
+            tableName: "teacher",
             modelName: "Teacher",
             timestamps: false,
         },

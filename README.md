@@ -138,7 +138,8 @@ npm run test
 
 ## How to test
 ### Import Postman collection
-Import the content of [Postman File](./TeacherStudent.postman_collection.json) to Postman.
+Import the content of [Postman File](./TeacherStudent.postman_collection.json) to Postman following guide.
+![Import postman guide](./images/guide-import-postman.png).
 
 ### Call the first api
 Call the first api to get response.
