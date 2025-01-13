@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { HttpStatus } from "../constants/HttpStatus";
-import { CommonStudentRes, getCommonStudentsSchema } from "../dtos/CommonStudent.dto";
+import { CommonStudentReq, CommonStudentRes, getCommonStudentsSchema } from "../dtos/CommonStudent.dto";
 import { RegisterStudent, registerStudentSchema } from "../dtos/RegisterStudent.dto";
 import { RetrieveForNotification, RetrieveForNotificationRes, retrieveForNotificationsSchema } from "../dtos/RetrieveForNotification.dto";
 import { SuspendStudent, suspendStudentSchema } from "../dtos/SuspendStudent.dto";
@@ -10,6 +10,7 @@ import { Teacher } from "../models/TeacherModel";
 import { TeacherStudent } from "../models/TeacherStudentModel";
 import { CustomError } from "../utils/CustomError"
 import { Op } from "sequelize";
+import { StudentDTO, TeacherDTO, TeacherStudentRes, TeacherWithStudents } from "../dtos/TeacherWithStudents.dto";
 
 export default class TeacherService {
     static registerStudent = async (body: RegisterStudent): Promise<void> => {
@@ -23,20 +24,20 @@ export default class TeacherService {
         const { teacher, students } = value;
 
         // find the teacher by email
-        const teacherRecord = await db.Teacher.findOne({ where: { email: teacher } });
+        const teacherRecord: Teacher | null = await db.Teacher.findOne({ where: { email: teacher } });
         if (!teacherRecord) {
             throw new CustomError(HttpStatus.NOT_FOUND, "Teacher not found!")
         }
 
         // Find students by their emails
-        const studentRecords = await db.Student.findAll({
+        const studentRecords: Student[] = await db.Student.findAll({
             where: {
                 email: students,
             },
         });
 
-        const foundStudentEmails = studentRecords.map((student: Partial<Student>) => student.email);
-        const missingStudents = students.filter((studentEmail: string) => !foundStudentEmails.includes(studentEmail));
+        const foundStudentEmails: (string | undefined)[] = studentRecords.map((student: Student) => student.email);
+        const missingStudents: string[] = students.filter((studentEmail: string) => !foundStudentEmails.includes(studentEmail));
 
         // ensure all students are found
         if (studentRecords.length !== students.length) {
@@ -44,21 +45,21 @@ export default class TeacherService {
         }
 
         // check existing associations in the TeacherStudent table
-        const existingAssociations = await db.TeacherStudent.findAll({
+        const existingAssociations: TeacherStudent[] = await db.TeacherStudent.findAll({
             where: {
                 teacherId: teacherRecord.id,
-                studentId: studentRecords.map((student: Partial<Student>) => student.id),
+                studentId: studentRecords.map((student: Student) => student.id),
             },
         });
 
-        const existingStudentIds = new Set(
-            existingAssociations.map((association: Partial<TeacherStudent>) => association.studentId)
+        const existingStudentIds: Set<number | undefined> = new Set(
+            existingAssociations.map((association: TeacherStudent) => association.studentId)
         );
 
         // filter out existing associations
         const newAssociations = studentRecords
-            .filter((student: Partial<Student>) => !existingStudentIds.has(student.id))
-            .map((student: Partial<Student>) => ({
+            .filter((student: Student) => !existingStudentIds.has(student.id))
+            .map((student: Student) => ({
                 teacherId: teacherRecord.id,
                 studentId: student.id,
             }));
@@ -72,7 +73,7 @@ export default class TeacherService {
         await db.TeacherStudent.bulkCreate(newAssociations);
     }
 
-    static getCommonStudents = async (query: any): Promise<CommonStudentRes> => {
+    static getCommonStudents = async (query: CommonStudentReq): Promise<CommonStudentRes> => {
         const { error, value } = getCommonStudentsSchema.validate(query);
 
         if (error) {
@@ -84,7 +85,7 @@ export default class TeacherService {
         teacher = Array.isArray(teacher) ? teacher : [teacher];
 
         //find all teachers with their student
-        const teachersWithStudents = await db.Teacher.findAll({
+        const teachersWithStudents: TeacherWithStudents[] = await db.Teacher.findAll({
             where: {
                 email: teacher,
             },
@@ -98,8 +99,8 @@ export default class TeacherService {
         });
 
         // Find missing teachers
-        const foundTeacherEmails = teachersWithStudents.map((teacher: Partial<Teacher>) => teacher.email);
-        const missingTeachers = teacher.filter(
+        const foundTeacherEmails: (string | undefined)[] = teachersWithStudents.map((teacher: TeacherDTO) => teacher.email);
+        const missingTeachers: (string | undefined)[] = teacher.filter(
             (email: string) => !foundTeacherEmails.includes(email)
         );
 
@@ -108,27 +109,33 @@ export default class TeacherService {
         }
 
         //extract and intersect student IDs
-        const studentIdSets = teachersWithStudents.map((teacher: any) =>
-            new Set(teacher.Students.map((student: Partial<Student>) => student.id))
+        const studentIdSets = teachersWithStudents.map((teacher: TeacherWithStudents) =>
+            new Set(teacher?.Students?.map((student: StudentDTO) => student.id))
         );
 
         //get common student id
-        const commonStudentIds = Array.from(
-            studentIdSets.reduce((commonSet: any, studentSet: any) => {
+        const commonStudentIds: (number | undefined)[] = Array.from(
+            studentIdSets.reduce((commonSet: Set<number | undefined>, studentSet: Set<number | undefined>) => {
                 if (commonSet.size === 0) return studentSet; // initialize with the first teacher's students
                 return new Set([...commonSet].filter((id) => studentSet.has(id))); // intersect the sets
             }, new Set<number>())
         );
 
         // retrieve student details for the common student IDs
-        const commonStudents = await db.Student.findAll({
+        const commonStudents: Student[] = await db.Student.findAll({
             where: {
                 id: commonStudentIds,
             },
             attributes: ['email'], //only retrieve email
         });
 
-        return { students: commonStudents ? commonStudents.map((s: Partial<Student>) => s.email) : [] };
+        return {
+            students: !!commonStudents
+                ? commonStudents
+                    .map((s: Student) => s.email)
+                    .filter((email: string | undefined) => email !== undefined)
+                : [],
+        };
     }
 
     static suspendStudent = async (body: SuspendStudent): Promise<void> => {
@@ -141,7 +148,7 @@ export default class TeacherService {
 
         const { student } = value;
 
-        const studentRecord = await db.Student.findOne({ where: { email: student } });
+        const studentRecord: Student | null = await db.Student.findOne({ where: { email: student } });
 
         // if the student does not exist, return an error
         if (!studentRecord) {
@@ -163,25 +170,25 @@ export default class TeacherService {
         const { teacher, notification } = value;
 
         // exact email from notification
-        const words = notification.split(' ');
-        const mentionedEmails = words
+        const words: string[] = notification.split(' ');
+        const mentionedEmails: string[] = words
             .filter((word: string) => word.startsWith('@'))
             .map((word: string) => word.slice(1));
 
         // validate email in mention notification
-        const invalidEmails = mentionedEmails.filter((email: string) => Joi.string().email().validate(email).error);
+        const invalidEmails: string[] = mentionedEmails.filter((email: string) => Joi.string().email().validate(email).error);
         if (invalidEmails.length > 0) {
             throw new CustomError(HttpStatus.BAD_REQUEST, `Invalid email addresses in mention: ${invalidEmails.join(', ')}`)
         }
 
         // find the teacher by email
-        const teacherRecord = await db.Teacher.findOne({ where: { email: teacher } });
+        const teacherRecord: Teacher | null = await db.Teacher.findOne({ where: { email: teacher } });
         if (!teacherRecord) {
             throw new CustomError(HttpStatus.NOT_FOUND, "Teacher not found!")
         }
 
         // find all student under the teacher
-        const teacherStudentRecords = await TeacherStudent.findAll({
+        const teacherStudentRecords: TeacherStudentRes[] = await TeacherStudent.findAll({
             where: { teacherId: teacherRecord.id },
             include: [
                 {
@@ -192,10 +199,12 @@ export default class TeacherService {
         });
 
         // get email of student under the teacher
-        const registeredStudentEmails = teacherStudentRecords.map((teacherStudent: any) => teacherStudent.Student.email);
+        const registeredStudentEmails: string[] = teacherStudentRecords
+            .map((teacherStudent: TeacherStudentRes) => teacherStudent?.Student?.email)
+            .filter((email: string | undefined) => email != undefined);
 
         // find suspended student 
-        const suspendedStudentEmails = await db.Student.findAll({
+        const suspendedStudentEmails: Student[] = await db.Student.findAll({
             where: {
                 email: {
                     [Op.in]: [...registeredStudentEmails, ...mentionedEmails],
@@ -205,10 +214,10 @@ export default class TeacherService {
             attributes: ['email'],
         });
 
-        const suspendedEmails = suspendedStudentEmails.map((student: Partial<Student>) => student.email);
+        const suspendedEmails: string[] = suspendedStudentEmails.map((student: Student) => student.email);
 
         // get final result
-        const eligibleEmails = new Set([
+        const eligibleEmails: Set<string> = new Set([
             ...registeredStudentEmails.filter((email: string) => !suspendedEmails.includes(email)),
             ...mentionedEmails.filter((email: string) => !suspendedEmails.includes(email)),
         ]);

@@ -17,6 +17,7 @@ The system provides APIs enabling teachers to manage their students through vari
   - [More ideas](#more-ideas)
 - [Tech stacks](#tech-stacks)
 - [Database structure](#database-structure)
+- [Test Coverage](#test-coverage)
 - [Source structure](#source-structure)
 - [How to run](#how-to-run)
   - [Pre-requisites](#pre-requisites)
@@ -73,6 +74,11 @@ The system provides APIs enabling teachers to manage their students through vari
 ## Database structure
 
 ![DB Structure](./images/db-structure.png)
+
+## Test coverage
+
+![Test Coverage](./images//unit-test-coverage.png)
+
 
 ## Source structure
 

@@ -2,11 +2,6 @@ import { HttpStatus } from "../../src/constants/HttpStatus";
 import TeacherService from "../../src/services/TeacherService";
 import { CustomError } from "../../src/utils/CustomError";
 import db from "../../src/models";
-// import { Teacher } from "../models/TeacherModel";
-// import { Student } from "../models/StudentModel";
-// import { TeacherStudent } from "../models/TeacherStudentModel";
-
-// jest.mock("../models");
 
 describe("TeacherService", () => {
     describe("RegisterStudentService", () => {

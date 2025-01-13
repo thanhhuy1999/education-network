@@ -21,6 +21,7 @@ export class Teacher
         Teacher.belongsToMany(models.Student, {
             through: models.TeacherStudent,
             foreignKey: "teacherId",
+            onDelete: "CASCADE",
         });
     }
 }

@@ -1,7 +1,11 @@
 import Joi from "joi";
 
-export interface CommonStudentRes{
-    students : string[] | []
+export interface CommonStudentRes {
+    students: string[] | [];
+}
+
+export interface CommonStudentReq {
+    teacher: string | string[] | undefined;
 }
 
 export const getCommonStudentsSchema = Joi.object({

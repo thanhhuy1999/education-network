@@ -2,6 +2,7 @@ import express from "express";
 import morgan from 'morgan';
 import fs from 'fs';
 import path from 'path';
+import cors from 'cors';
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import swaggerOptions from "../swagger.config";
@@ -14,7 +15,10 @@ import router from "./routes";
 const app = express();
 const port = 3000;
 
+//using body parser to get data from body
+//using cors
 app.use(bodyParser.json());
+app.use(cors())
 
 // create swagger-docs
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -45,10 +49,6 @@ const accessLogStream = fs.createWriteStream(accessLogFile, { flags: 'a' }); //o
 // using morgan
 app.use(morgan('combined', { stream: accessLogStream })); //detail infor in file
 app.use(morgan('dev')); // simple infor in console
-
-app.get("/", (req: any, res: any) => {
-    res.send("Hello world!");
-});
 
 app.use(router)
 
