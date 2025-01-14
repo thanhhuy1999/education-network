@@ -2,6 +2,8 @@ import { HttpStatus } from "../../src/constants/HttpStatus";
 import TeacherService from "../../src/services/TeacherService";
 import { CustomError } from "../../src/utils/CustomError";
 import db from "../../src/models";
+import { Op } from "sequelize";
+import { StudentDTO } from "../../src/dtos/TeacherWithStudents.dto";
 
 describe("TeacherService", () => {
     describe("RegisterStudentService", () => {
@@ -122,7 +124,7 @@ describe("TeacherService", () => {
     });
 
     describe("RetrieveForNotificationStudentService", () => {
-        it("Should throw an error if input invalid", async () => {
+        it("Should throw an error if input invalid teacher", async () => {
             const body = { teacher: "invalidEmail@something", notification: "Hello everyone" };
 
             await expect(TeacherService.retrieveForNotificationStudent(body)).rejects.toThrowError(
@@ -139,8 +141,13 @@ describe("TeacherService", () => {
         });
 
         it("Should throw an error if teacher not found", async () => {
-            const body = { teacher: "notExistTeacher@school.com", notification: "Hello everyone" };
+            const body = { teacher: "teacher@school.com", notification: "Hello everyone" };
+            const mockFindAllStudent: StudentDTO[] = [
+                { id: 1, email: "student1@school.com", isSuspended: false },
+                { id: 2, email: "student2@school.com", isSuspended: false }
+            ]
 
+            jest.spyOn(db.Student, "findAll").mockResolvedValue(mockFindAllStudent);
             jest.spyOn(db.Teacher, "findOne").mockResolvedValue(null);
 
             await expect(TeacherService.retrieveForNotificationStudent(body)).rejects.toThrowError(
@@ -148,12 +155,34 @@ describe("TeacherService", () => {
             );
         });
 
+        it("Should throw an error if mentioned student not found", async () => {
+            const body = { teacher: "teacher@school.com", notification: "Hello Hello @student1@school.com" };
+
+            jest.spyOn(db.Student, "findAll").mockResolvedValue([]);
+            jest.spyOn(db.Teacher, "findOne").mockResolvedValue({ id: 1, email: "teacher@school.com" });
+
+            await expect(TeacherService.retrieveForNotificationStudent(body)).rejects.toThrowError(
+                new CustomError(HttpStatus.BAD_REQUEST, "Student(s) not found: student1@school.com")
+            );
+        });
+
+
         it("Should return recipients correctly", async () => {
             const body = { teacher: "teacher@school.com", notification: "Hello @student1@school.com @student2@school.com" };
+            const mockFindAllStudent: StudentDTO[] = [
+                { id: 1, email: "student1@school.com", isSuspended: false },
+                { id: 2, email: "student2@school.com", isSuspended: false }
+            ]
+            const mockTeacherWithStudents = {
+                id: 1, email: "teacher@school.com",
+                Students:
+                    [
+                        { id: 1, email: "student1@school.com", isSuspended: false }
+                    ]
+            }
 
-            jest.spyOn(db.Teacher, "findOne").mockResolvedValue({ id: 1, email: "teacher@school.com" });
-            jest.spyOn(db.TeacherStudent, "findAll").mockResolvedValue([{ teacherId: 1, studentId: 1, Student: { id: 1, email: "student1@school.com" } }]);
-            jest.spyOn(db.Student, "findAll").mockResolvedValue([]);
+            jest.spyOn(db.Student, "findAll").mockResolvedValue(mockFindAllStudent);
+            jest.spyOn(db.Teacher, "findOne").mockResolvedValue(mockTeacherWithStudents);
 
             const response = await TeacherService.retrieveForNotificationStudent(body);
             expect(response.recipients).toEqual(["student1@school.com", "student2@school.com"]);

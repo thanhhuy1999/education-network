@@ -183,59 +183,46 @@ export default class TeacherService {
         if (invalidEmails.length > 0) {
             throw new CustomError(HttpStatus.BAD_REQUEST, `Invalid email addresses in mention: ${invalidEmails.join(', ')}`)
         }
-    
 
-        const existingStudents: Student[] = await db.Student.findAll({
-            where: { email: { [Op.in]: mentionedEmails } },
-            attributes: ['email'],
+        // find the teacher by email
+        const teacherStudentRecords: TeacherWithStudents | null = await db.Teacher.findOne({
+            where: { email: teacher },
+            include: [
+                {
+                    model: Student,
+                    attributes: ['id', 'email', 'isSuspended'],
+                    through: { attributes: [] },
+                },
+            ],
         });
+        if (!teacherStudentRecords) {
+            throw new CustomError(HttpStatus.NOT_FOUND, "Teacher not found!")
+        }
 
-        const existingEmails: Set<string> = new Set(existingStudents.map((student: Student) => student.email));
+        //find mentioned student 
+        const existingStudents: StudentDTO[] = await db.Student.findAll({
+            where: { email: { [Op.in]: mentionedEmails } },
+            attributes: ['email', 'isSuspended'],
+        });
+        const existingEmails: Set<string> = new Set(existingStudents.map((student: StudentDTO) => student.email));
 
         const nonExistentEmails: string[] = mentionedEmailsUnique.filter((email: string) => !existingEmails.has(email));
         if (nonExistentEmails.length > 0) {
             throw new CustomError(HttpStatus.NOT_FOUND, `Student(s) not found: ${nonExistentEmails.join(', ')}`);
         }
+        const mentionedStudentEmailWithoutSuspended = existingStudents
+            .filter((student: StudentDTO) => !student.isSuspended)
+            .map((student: StudentDTO) => student.email)
 
-        // find the teacher by email
-        const teacherRecord: Teacher | null = await db.Teacher.findOne({ where: { email: teacher } });
-        if (!teacherRecord) {
-            throw new CustomError(HttpStatus.NOT_FOUND, "Teacher not found!")
-        }
-
-        // find all student under the teacher
-        const teacherStudentRecords: TeacherStudentRes[] = await TeacherStudent.findAll({
-            where: { teacherId: teacherRecord.id },
-            include: [
-                {
-                    model: Student,
-                    attributes: ['email'],
-                },
-            ],
-        });
-
-        // get email of student under the teacher
-        const registeredStudentEmails: string[] = teacherStudentRecords
-            .map((teacherStudent: TeacherStudentRes) => teacherStudent?.Student?.email)
-            .filter((email: string | undefined) => email != undefined);
-
-        // find suspended student 
-        const suspendedStudentEmails: Student[] = await db.Student.findAll({
-            where: {
-                email: {
-                    [Op.in]: [...registeredStudentEmails, ...mentionedEmailsUnique],
-                },
-                isSuspended: 1
-            },
-            attributes: ['email'],
-        });
-
-        const suspendedEmails: string[] = suspendedStudentEmails.map((student: Student) => student.email);
+        // get email of student under the teacher without suspended
+        const registeredStudentEmailsWithoutSuspened: string[] = teacherStudentRecords.Students
+            .filter((student: StudentDTO) => student.email != undefined && !student.isSuspended)
+            .map((student: StudentDTO) => student.email)
 
         // get final result
         const eligibleEmails: Set<string> = new Set([
-            ...registeredStudentEmails.filter((email: string) => !suspendedEmails.includes(email)),
-            ...mentionedEmails.filter((email: string) => !suspendedEmails.includes(email)),
+            ...mentionedStudentEmailWithoutSuspended,
+            ...registeredStudentEmailsWithoutSuspened
         ]);
 
         return { recipients: [...eligibleEmails] };

@@ -1,18 +1,18 @@
 export interface TeacherWithStudents {
-    id?: number;
-    email?: string;
-    Students?: StudentDTO[];
+    id: number;
+    email: string;
+    Students: StudentDTO[];
 }
 
 export interface StudentDTO {
-    id?: number;
-    email?: string;
-    isSuspended?: boolean;
+    id: number;
+    email: string;
+    isSuspended: boolean;
 }
 
 export interface TeacherDTO {
-    id?: number;
-    email?: string;
+    id: number;
+    email: string;
 }
 
 export interface TeacherStudentRes {
