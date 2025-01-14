@@ -27,13 +27,15 @@ export const seedData = async () => {
 
         if (await Student.count() === 0) {
             const students = [
+                { email: 'commonstudent1@gmail.com', isSuspended: false },
+                { email: 'commonstudent2@gmail.com', isSuspended: false },
                 { email: 'studentjon@gmail.com', isSuspended: false },
                 { email: 'studenthon@gmail.com', isSuspended: false },
                 { email: 'studentbob@gmail.com', isSuspended: false },
                 { email: 'student_only_under_teacher_ken@gmail.com', isSuspended: false },
-                { email: 'commonstudent1@gmail.com', isSuspended: false },
-                { email: 'commonstudent2@gmail.com', isSuspended: false },
                 { email: 'studentmary@gmail.com', isSuspended: false },
+                { email: 'studentagnes@gmail.com', isSuspended: false },
+                { email: 'studentmiche@gmail.com', isSuspended: false },
             ];
 
             console.log('Seeding students...');
@@ -48,21 +50,25 @@ export const seedData = async () => {
             console.log("Seeding succesfully!");
         }
 
-        // if (await TeacherStudent.count() === 0) {
-        //     const teacherStudents = [
-        //         { teacherId: 1, studentId: 1 },
+        if (await TeacherStudent.count() === 0) {
+            const teacherStudents = [
+                { teacherId: 1, studentId: 1 },
+                { teacherId: 1, studentId: 2 },
+                { teacherId: 2, studentId: 1 },
+                { teacherId: 2, studentId: 2 },
 
-        //     ];
+            ];
 
-        //     console.log('Seeding teacher-student relationships...');
-        //     for (const teacherStudent of teacherStudents) {
-        //         await TeacherStudent.create({
-        //             ...teacherStudent,
-        //             createdAt: new Date(),
-        //             updatedAt: new Date(),
-        //         });
-        //     }
-        // }
+            console.log('Seeding teacher-student relationships...');
+            for (const teacherStudent of teacherStudents) {
+                await TeacherStudent.create({
+                    ...teacherStudent,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+            }
+            console.log("Seeding succesfully!");
+        }
     } catch (error) {
         throw new CustomError(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create the users.");
     }

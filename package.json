@@ -8,9 +8,10 @@
     "start-dev": "nodemon -L src/index.ts",
     "docker-up": "docker-compose down && docker-compose up",
     "docker-down": "docker-compose down",
-    "test": "jest"
+    "test": "jest",
+    "test-coverage": "npx jest --coverage"
   },
-  "author": "",
+  "author": "HuyTT13",
   "license": "ISC",
   "dependencies": {
     "@types/body-parser": "^1.19.5",

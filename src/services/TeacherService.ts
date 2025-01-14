@@ -21,7 +21,9 @@ export default class TeacherService {
             throw new CustomError(HttpStatus.BAD_REQUEST, error.details[0].message)
         }
 
-        const { teacher, students } = value;
+        //ensure students is unique
+        let { teacher, students } = value;
+        students = Array.from(new Set(students))
 
         // find the teacher by email
         const teacherRecord: Teacher | null = await db.Teacher.findOne({ where: { email: teacher } });
@@ -80,9 +82,9 @@ export default class TeacherService {
             throw new CustomError(HttpStatus.BAD_REQUEST, error.details[0].message);
         }
 
-        //change to array list
+        //change to array list and ensure teachers unique
         let { teacher } = value;
-        teacher = Array.isArray(teacher) ? teacher : [teacher];
+        teacher = Array.isArray(teacher) ? Array.from(new Set(teacher)) : [teacher];
 
         //find all teachers with their student
         const teachersWithStudents: TeacherWithStudents[] = await db.Teacher.findAll({
@@ -174,11 +176,25 @@ export default class TeacherService {
         const mentionedEmails: string[] = words
             .filter((word: string) => word.startsWith('@'))
             .map((word: string) => word.slice(1));
+        const mentionedEmailsUnique: string[] = Array.from(new Set(mentionedEmails))
 
         // validate email in mention notification
         const invalidEmails: string[] = mentionedEmails.filter((email: string) => Joi.string().email().validate(email).error);
         if (invalidEmails.length > 0) {
             throw new CustomError(HttpStatus.BAD_REQUEST, `Invalid email addresses in mention: ${invalidEmails.join(', ')}`)
+        }
+    
+
+        const existingStudents: Student[] = await db.Student.findAll({
+            where: { email: { [Op.in]: mentionedEmails } },
+            attributes: ['email'],
+        });
+
+        const existingEmails: Set<string> = new Set(existingStudents.map((student: Student) => student.email));
+
+        const nonExistentEmails: string[] = mentionedEmailsUnique.filter((email: string) => !existingEmails.has(email));
+        if (nonExistentEmails.length > 0) {
+            throw new CustomError(HttpStatus.NOT_FOUND, `Student(s) not found: ${nonExistentEmails.join(', ')}`);
         }
 
         // find the teacher by email
@@ -207,7 +223,7 @@ export default class TeacherService {
         const suspendedStudentEmails: Student[] = await db.Student.findAll({
             where: {
                 email: {
-                    [Op.in]: [...registeredStudentEmails, ...mentionedEmails],
+                    [Op.in]: [...registeredStudentEmails, ...mentionedEmailsUnique],
                 },
                 isSuspended: 1
             },
