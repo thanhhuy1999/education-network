@@ -8,4 +8,6 @@ teacherRoute.get("/commonstudents", TeacherController.getCommonStudents);
 teacherRoute.post("/suspend", TeacherController.suspendStudent);
 teacherRoute.post("/retrievefornotifications", TeacherController.retrieveForNotificationStudent);
 
+teacherRoute.post("/removestudent", TeacherController.removeStudent);
+
 export default teacherRoute;

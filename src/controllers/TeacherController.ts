@@ -28,4 +28,10 @@ export default class TeacherController {
 
         res.status(HttpStatus.OK).json(listRecipients);
     };
+
+    static removeStudent = async (req: Request, res: Response, next: NextFunction) => {
+        await TeacherService.removeStudent(req.body);
+
+        res.status(HttpStatus.OK).json("");
+    };
 }

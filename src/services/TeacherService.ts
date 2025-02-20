@@ -227,4 +227,59 @@ export default class TeacherService {
 
         return { recipients: [...eligibleEmails] };
     }
+
+
+    static removeStudent = async (body: { teacher: string, students: [] }): Promise<void> => {
+        console.log("body: ", body)
+        const { teacher, students } = body;
+
+        if (!teacher) {
+            throw new CustomError(400, "Teacher must be provided")
+        }
+        if (!students || !Array.isArray(students) || students.length === 0) {
+            throw new CustomError(400, "Invalid request!");
+        }
+
+        const teacherRecord = await db.Teacher.findOne({
+            where: {
+                email: teacher
+            },
+            include: [
+                {
+                    model: Student,
+                    attributes: ['id', 'email', 'isSuspended'],
+                    through: { attributes: [] },
+                },
+            ],
+        })
+        if (!teacherRecord) {
+            throw new CustomError(404, "TEACHER NOT FOUND")
+        }
+
+        const studentRecord = await db.Student.findAll({
+            where: {
+                email: students
+            }
+        })
+        const studentIdList = studentRecord.map((student: Student) => student.id);
+
+        //get the list student for teacher
+        const listStudentUnderTeacherId: number[] = teacherRecord.Students.map((student: Student) => student.id)
+        const listStudentUnderTeacherEmail: string[] = teacherRecord.Students.map((student: Student) => student.email)
+
+        //check the student not under the teacher
+        const notUnderStudent: string[] = students.filter((email: string) => !listStudentUnderTeacherEmail.includes(email))
+        if (notUnderStudent.length > 0) {
+            throw new CustomError(400, `One or more student not under the teacher: ${notUnderStudent.join(" ,")}`);
+        }
+
+        //if everything is oke, delete record from Teacher Record
+        const relationsRecord: { teacherId: number, studentId: number }[] = studentIdList.map((id: number) => (
+            { studentId: id, teacherId: teacherRecord.id }
+        ));
+
+        for await (let relation of relationsRecord) {
+            await db.TeacherStudent.destroy({ where: relation });
+        }
+    }
 }
